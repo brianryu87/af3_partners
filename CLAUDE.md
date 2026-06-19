@@ -15,7 +15,7 @@ function as `http=` for testability.
 - `models.py` — `InputSeq`, `Partner` dataclasses.
 - `uniprot.py` — gene → isoform sequences; accession/sequence lookup; curated interactions.
 - `partners.py` — STRING + IntAct protein-partner discovery + union.
-- `rna.py` — ENCORI + curated-TSV RNA partners.
+- `rna.py` — ENCORI + IntAct-RNA (RNAcentral) + curated-TSV RNA partners.
 - `classify.py` — ribosomal/non-ribosomal classification; confidence tiering.
 - `af3.py` — AF3-local JSON builders.
 - `manifest.py` — manifest.tsv + README.txt.
@@ -30,4 +30,8 @@ function as `http=` for testability.
   UniProt accessions and `taxId == 9606`.
 - ENCORI returns binding sites (many rows/target) and no sequences — deduped and
   bounded (`ENCORI_MAX`); usable RNA sequences come from `--rna-tsv`.
+- IntAct also reports RNA interactors (miRNA/lncRNA/ncRNA) carrying RNAcentral
+  URS ids; these are kept when `uniqueId` starts with `URS` and both sides are
+  human, with sequences resolved from RNAcentral (`RNACENTRAL`). IntAct is
+  fetched once per run and shared between the protein and RNA paths.
 - Tests: stdlib `unittest`, fixtures + injected fake HTTP; live smoke gated by `AF3_LIVE=1`.

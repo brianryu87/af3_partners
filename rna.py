@@ -1,4 +1,5 @@
 import csv
+import json
 import urllib.parse
 
 import httpget
@@ -8,6 +9,7 @@ from models import Partner
 ENCORI_ASSEMBLY = "hg38"
 ENCORI_MAX = 25
 RNA_MAX_LEN = 1500
+RNACENTRAL = "https://rnacentral.org/api/v1/rna"
 
 
 def fetch_encori(symbol, http=httpget.get):
@@ -44,6 +46,42 @@ def parse_encori(text):
     return out
 
 
+def fetch_rnacentral_sequence(urs, http=httpget.get):
+    base = urs.split("_")[0]  # strip any _<taxid> suffix
+    try:
+        data = json.loads(http(f"{RNACENTRAL}/{base}.json"))
+    except Exception:
+        return None
+    seq = data.get("sequence")
+    if not seq:
+        return None
+    return to_rna(seq)
+
+
+def parse_intact_rna(json_text, input_accessions):
+    data = json.loads(json_text)
+    out = {}
+    for item in data.get("content", []):
+        if item.get("taxIdA") != 9606 or item.get("taxIdB") != 9606:
+            continue
+        ida, idb = item.get("uniqueIdA"), item.get("uniqueIdB")
+        if ida in input_accessions:
+            other_id, other_name = idb, item.get("moleculeB")
+        elif idb in input_accessions:
+            other_id, other_name = ida, item.get("moleculeA")
+        else:
+            continue
+        if not other_id or not other_id.startswith("URS"):
+            continue
+        urs = other_id.split("_")[0]
+        mi = item.get("intactMiscore")
+        existing = out.get(urs)
+        if existing is None or (mi if mi is not None else 0) > (existing.intact_mi if existing.intact_mi is not None else 0):
+            out[urs] = Partner(gene=other_name or urs, partner_id=urs, kind="rna",
+                               sources=["intact"], intact_mi=mi)
+    return out
+
+
 def load_rna_tsv(path):
     out = []
     with open(path, newline="") as f:
@@ -58,7 +96,7 @@ def load_rna_tsv(path):
     return out
 
 
-def discover_rna_partners(symbol, rna_tsv, http=httpget.get):
+def discover_rna_partners(symbol, rna_tsv, http=httpget.get, intact_text=None, input_accessions=None):
     by_gene = {}
     try:
         for key, p in parse_encori(fetch_encori(symbol, http)).items():
@@ -69,10 +107,14 @@ def discover_rna_partners(symbol, rna_tsv, http=httpget.get):
         for p in load_rna_tsv(rna_tsv):
             key = p.gene.upper()
             if key in by_gene:
-                # curated sequence enriches an ENCORI hit
                 by_gene[key].sequence = p.sequence
                 if "curated" not in by_gene[key].sources:
                     by_gene[key].sources.append("curated")
             else:
                 by_gene[key] = p
-    return list(by_gene.values())
+    result = list(by_gene.values())
+    if intact_text and input_accessions:
+        for urs, p in parse_intact_rna(intact_text, input_accessions).items():
+            p.sequence = fetch_rnacentral_sequence(p.partner_id, http)
+            result.append(p)
+    return result

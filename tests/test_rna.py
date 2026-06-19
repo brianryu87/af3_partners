@@ -83,3 +83,88 @@ class TestEncoriFailure(unittest.TestCase):
         genes = {p.gene for p in parts}
         self.assertIn("ZFAS1", genes)    # curated rows still loaded
         self.assertEqual(len(parts), 2)  # ENCORI error swallowed; only the 2 curated rows
+
+
+class TestFetchRnacentralSequence(unittest.TestCase):
+    def test_strips_taxid_and_normalizes_to_rna(self):
+        captured = {}
+        def fake(url):
+            captured["url"] = url
+            return '{"sequence": "CAAAGTGCTG", "length": 10}'
+        seq = rna.fetch_rnacentral_sequence("URS0000149452_9606", http=fake)
+        self.assertIn("/URS0000149452.json", captured["url"])  # taxid suffix stripped
+        self.assertEqual(seq, "CAAAGUGCUG")                    # T -> U
+
+    def test_failure_returns_none(self):
+        def boom(url):
+            raise OSError("rnacentral down")
+        self.assertIsNone(rna.fetch_rnacentral_sequence("URS0000149452_9606", http=boom))
+
+    def test_missing_sequence_field_returns_none(self):
+        self.assertIsNone(rna.fetch_rnacentral_sequence("URS1", http=lambda u: '{"length": 0}'))
+
+
+INTACT_RNA_JSON = """
+{"content": [
+  {"moleculeA": "ELAVL1", "moleculeB": "hsa-mir-93", "uniqueIdA": "Q15717",
+   "uniqueIdB": "URS0000149452_9606", "intactMiscore": 0.56, "taxIdA": 9606,
+   "taxIdB": 9606, "typeA": "protein", "typeB": "mirna"},
+  {"moleculeA": "ELAVL1", "moleculeB": "lncrna_h19", "uniqueIdA": "Q15717",
+   "uniqueIdB": "URS0000767B73_10090", "intactMiscore": 0.9, "taxIdA": 9606,
+   "taxIdB": 10090, "typeA": "protein", "typeB": "lncrna"},
+  {"moleculeA": "ELAVL1", "moleculeB": "mrna_x", "uniqueIdA": "Q15717",
+   "uniqueIdB": "ENST00000407627", "intactMiscore": 0.5, "taxIdA": 9606,
+   "taxIdB": 9606, "typeA": "protein", "typeB": "mrna"},
+  {"moleculeA": "ELAVL1", "moleculeB": "PABPC1", "uniqueIdA": "Q15717",
+   "uniqueIdB": "P11940", "intactMiscore": 0.8, "taxIdA": 9606, "taxIdB": 9606,
+   "typeA": "protein", "typeB": "protein"}
+]}
+"""
+
+
+class TestParseIntactRna(unittest.TestCase):
+    def setUp(self):
+        self.d = rna.parse_intact_rna(INTACT_RNA_JSON, {"Q15717"})
+
+    def test_keeps_human_urs_rna(self):
+        self.assertIn("URS0000149452", self.d)
+        p = self.d["URS0000149452"]
+        self.assertEqual(p.kind, "rna")
+        self.assertEqual(p.partner_id, "URS0000149452")  # taxid stripped
+        self.assertEqual(p.gene, "hsa-mir-93")
+        self.assertEqual(p.intact_mi, 0.56)
+        self.assertEqual(p.sources, ["intact"])
+        self.assertIsNone(p.sequence)
+
+    def test_drops_non_human_urs(self):
+        self.assertNotIn("URS0000767B73", self.d)
+
+    def test_drops_mrna_enst_and_protein(self):
+        self.assertTrue(all(k.startswith("URS") for k in self.d))
+        self.assertNotIn("P11940", self.d)
+
+    def test_only_one_kept(self):
+        self.assertEqual(len(self.d), 1)
+
+
+class TestDiscoverRnaWithIntact(unittest.TestCase):
+    def test_intact_rna_resolved_and_appended(self):
+        def fake(url):
+            if "rnacentral" in url:
+                return '{"sequence": "CAAAGUGCUGUUCGUGCAGGUAG", "length": 23}'
+            if "encori" in url:
+                return "#cite\nRBP\tgeneName\tgeneType\ttotalClipExpNum\n"
+            raise AssertionError(f"unexpected url: {url}")
+        parts = rna.discover_rna_partners(
+            "ELAVL1", None, http=fake,
+            intact_text=INTACT_RNA_JSON, input_accessions={"Q15717"})
+        mirs = [p for p in parts if p.partner_id == "URS0000149452"]
+        self.assertEqual(len(mirs), 1)
+        self.assertEqual(mirs[0].sequence, "CAAAGUGCUGUUCGUGCAGGUAG")
+        self.assertEqual(mirs[0].kind, "rna")
+        self.assertEqual(mirs[0].sources, ["intact"])
+
+    def test_no_intact_text_means_no_intact_rna(self):
+        parts = rna.discover_rna_partners(
+            "ELAVL1", None, http=lambda u: "#c\nRBP\tgeneName\tgeneType\ttotalClipExpNum\n")
+        self.assertEqual(parts, [])
