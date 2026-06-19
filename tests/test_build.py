@@ -59,3 +59,29 @@ class TestBuild(unittest.TestCase):
                 sample = json.loads(z.read(jsons[0]))
                 self.assertEqual(sample[0]["dialect"], "alphafold3")
                 self.assertEqual(len(sample[0]["sequences"]), 2)
+
+
+def fake_http_empty(url):
+    if "/stream?" in url:
+        return FASTA
+    if "string-db.org" in url:
+        return ("stringId_A\tstringId_B\tpreferredName_A\tpreferredName_B\tncbiTaxonId\tscore\t"
+                "nscore\tfscore\tpscore\tascore\tescore\tdscore\ttscore\n")
+    if "intact/ws" in url:
+        return '{"content": []}'
+    if "encori" in url:
+        return "#cite\nRBP\tgeneName\tgeneType\ttotalClipExpNum\n"
+    if "cc_interaction" in url:
+        return "Entry\tInteracts with\nP62847\t\n"
+    raise AssertionError(f"unexpected url: {url}")
+
+
+class TestBuildZeroPartners(unittest.TestCase):
+    def test_zero_partners_still_valid_zip(self):
+        with tempfile.TemporaryDirectory() as d:
+            zip_path = make_inputs.build("RPS24", d, rna_tsv=None, http=fake_http_empty)
+            with zipfile.ZipFile(zip_path) as z:
+                names = z.namelist()
+                self.assertEqual([n for n in names if n.endswith(".json")], [])
+                self.assertTrue(any(n.endswith("manifest.tsv") for n in names))
+                self.assertTrue(any(n.endswith("README.txt") for n in names))

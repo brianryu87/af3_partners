@@ -23,19 +23,31 @@ def _collect_partners(symbol, input_seqs, rna_tsv, http):
     result = []
 
     proteins = partners_mod.discover_protein_partners(symbol, input_accs, http)
+    seen_acc = {}
     for p in proteins.values():
         p.kind = classify_kind(p.gene)
         acc, seq = uniprot.fetch_protein_by_gene(p.gene, http)
         if not seq:
             print(f"  WARN: no sequence for {p.gene}, skipping")
             continue
+        if acc in seen_acc:
+            existing = seen_acc[acc]
+            for s in p.sources:
+                if s not in existing.sources:
+                    existing.sources.append(s)
+            print(f"  WARN: {p.gene} resolves to {acc}, already added; merged sources")
+            continue
         p.partner_id = acc
         p.sequence = seq
+        seen_acc[acc] = p
         result.append(p)
 
     for p in rna_mod.discover_rna_partners(symbol, rna_tsv, http):
         if not p.sequence:
             print(f"  WARN: no sequence for RNA {p.gene} (ENCORI-only), skipping")
+            continue
+        if len(p.sequence) > rna_mod.RNA_MAX_LEN:
+            print(f"  WARN: RNA {p.gene} sequence {len(p.sequence)} nt exceeds RNA_MAX_LEN={rna_mod.RNA_MAX_LEN}, skipping")
             continue
         result.append(p)
 
@@ -46,6 +58,8 @@ def _collect_partners(symbol, input_seqs, rna_tsv, http):
         print(f"  WARN: UniProt interactions failed: {e}")
         curated = set()
     for p in result:
+        if p.kind == "rna":
+            continue
         if p.partner_id in curated:
             p.uniprot_curated = True
             if "uniprot" not in p.sources:

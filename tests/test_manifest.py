@@ -49,7 +49,8 @@ class TestWriteReadme(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             path = os.path.join(d, "README.txt")
             manifest.write_readme(path, "RPS24", partners, "2026-06-19")
-            text = open(path).read()
+            with open(path, encoding="utf-8") as f:
+                text = f.read()
         self.assertIn("RPS24", text)
         self.assertIn("ribosomal", text)
         self.assertIn("2026-06-19", text)
@@ -61,5 +62,6 @@ class TestReadmeNoRnaCaveat(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             path = os.path.join(d, "README.txt")
             manifest.write_readme(path, "RPS24", partners, "2026-06-19")
-            text = open(path, encoding="utf-8").read()
+            with open(path, encoding="utf-8") as f:
+                text = f.read()
         self.assertIn("no RNA partners", text)
