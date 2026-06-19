@@ -20,7 +20,9 @@ Output: `RPS24.zip` containing:
 - Sequences & isoforms: UniProt (reviewed + computational/TrEMBL).
 - Protein partners: STRING (combined + per-channel scores) and IntAct (MI score).
 - Curated UniProt binary interactions mark `uniprot_curated`.
-- RNA partners: ENCORI (best-effort; bounded) + optional `--rna-tsv` (gene, sequence).
+- RNA partners: ENCORI (best-effort; bounded), curated RNA from IntAct (RNAcentral
+  URS interactors, sequences resolved via RNAcentral), and optional `--rna-tsv`
+  (gene, sequence).
 
 ## Confidence tiers
 
