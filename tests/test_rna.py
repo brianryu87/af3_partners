@@ -69,3 +69,17 @@ class TestDiscoverRnaPartners(unittest.TestCase):
         self.assertIn("ZFAS1", genes)    # from curated (has sequence)
         malat1 = [p for p in parts if p.gene == "MALAT1"][0]
         self.assertIsNone(malat1.sequence)
+
+
+class TestEncoriFailure(unittest.TestCase):
+    def test_encori_failure_falls_back_to_curated(self):
+        def boom(url):
+            raise OSError("encori down")
+        parts = rna.discover_rna_partners(
+            "RPS24",
+            os.path.join(FIXTURES, "rna_example.tsv"),
+            http=boom,
+        )
+        genes = {p.gene for p in parts}
+        self.assertIn("ZFAS1", genes)    # curated rows still loaded
+        self.assertEqual(len(parts), 2)  # ENCORI error swallowed; only the 2 curated rows

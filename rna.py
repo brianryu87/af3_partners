@@ -8,7 +8,6 @@ from models import Partner
 ENCORI_ASSEMBLY = "hg38"
 ENCORI_MAX = 25
 RNA_MAX_LEN = 1500
-ORGANISM = 9606
 
 
 def fetch_encori(symbol, http=httpget.get):
