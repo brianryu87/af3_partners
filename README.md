@@ -24,6 +24,12 @@ Output: `RPS24.zip` containing:
   URS interactors, sequences resolved via RNAcentral), and optional `--rna-tsv`
   (gene, sequence).
 
+## Job size limit
+
+Each JSON is one pairwise job. Pairs whose total length (input isoform + partner,
+counting 1 residue or 1 nucleotide as 1 token) exceeds `AF3_MAX_TOKENS` (5000,
+the AlphaFold Server limit) are skipped with a warning.
+
 ## Confidence tiers
 
 - high: experimental evidence (STRING experiments channel, IntAct MI ≥ 0.45,

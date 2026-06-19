@@ -30,6 +30,9 @@ function as `http=` for testability.
   UniProt accessions and `taxId == 9606`.
 - ENCORI returns binding sites (many rows/target) and no sequences — deduped and
   bounded (`ENCORI_MAX`); usable RNA sequences come from `--rna-tsv`.
+- Each emitted JSON is one pairwise job; a pair is skipped when
+  `len(input isoform) + len(partner) > AF3_MAX_TOKENS` (5000, the AlphaFold
+  Server per-job token limit). This replaced the old per-RNA `RNA_MAX_LEN` cap.
 - IntAct also reports RNA interactors (miRNA/lncRNA/ncRNA) carrying RNAcentral
   URS ids; these are kept when `uniqueId` starts with `URS` and both sides are
   human, with sequences resolved from RNAcentral (`RNACENTRAL`). IntAct is
