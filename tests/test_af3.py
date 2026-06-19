@@ -34,6 +34,9 @@ class TestAf3(unittest.TestCase):
         self.assertEqual(job["sequences"][1]["rna"]["sequence"], "ACGU")
         self.assertEqual(job["sequences"][1]["rna"]["description"], "ZFAS1")
 
+    def test_af3_max_tokens_constant(self):
+        self.assertEqual(af3.AF3_MAX_TOKENS, 5000)
+
 
 if __name__ == "__main__":
     unittest.main()

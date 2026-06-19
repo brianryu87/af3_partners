@@ -12,7 +12,7 @@ import uniprot
 import partners as partners_mod
 import rna as rna_mod
 import manifest as manifest_mod
-from af3 import af3_protein_pair, af3_rna_pair
+from af3 import af3_protein_pair, af3_rna_pair, AF3_MAX_TOKENS
 from classify import classify_kind, derive_tier
 
 KIND_DIR = {"ribosomal": "ribosomal_protein", "nonribosomal": "nonribosomal_protein", "rna": "rna"}
@@ -53,9 +53,6 @@ def _collect_partners(symbol, input_seqs, rna_tsv, http):
         if not p.sequence:
             print(f"  WARN: no sequence for RNA {p.gene}, skipping")
             continue
-        if len(p.sequence) > rna_mod.RNA_MAX_LEN:
-            print(f"  WARN: RNA {p.gene} sequence {len(p.sequence)} nt exceeds RNA_MAX_LEN={rna_mod.RNA_MAX_LEN}, skipping")
-            continue
         result.append(p)
 
     try:
@@ -88,6 +85,10 @@ def build(symbol, out_dir, rna_tsv=None, http=httpget.get):
         rows = []
         for inp in input_seqs:
             for p in partners:
+                if len(inp.sequence) + len(p.sequence) > AF3_MAX_TOKENS:
+                    print(f"  WARN: skipping {inp.isoform_id} x {p.partner_id}: "
+                          f"{len(inp.sequence) + len(p.sequence)} tokens > {AF3_MAX_TOKENS}")
+                    continue
                 name = f"{inp.isoform_id}_{p.partner_id}"
                 rel = os.path.join("AF3_inputs", KIND_DIR[p.kind], p.tier, f"{name}.json")
                 abspath = os.path.join(root, rel)

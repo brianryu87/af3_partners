@@ -4,6 +4,7 @@ from models import InputSeq, Partner
 
 AF3_DIALECT = "alphafold3"
 AF3_VERSION = 4  # latest AF3 input JSON schema version
+AF3_MAX_TOKENS = 5000  # AlphaFold Server per-job total: 1 residue or 1 nucleotide = 1 token
 
 
 def to_rna(seq):
