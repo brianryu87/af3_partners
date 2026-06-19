@@ -56,7 +56,7 @@ def parse_intact(json_text, input_accessions):
         key = other_gene.upper()
         mi = item.get("intactMiscore")
         existing = out.get(key)
-        if existing is None or (mi or 0) > (existing.intact_mi or 0):
+        if existing is None or (mi if mi is not None else 0) > (existing.intact_mi if existing.intact_mi is not None else 0):
             out[key] = Partner(gene=other_gene, partner_id=other_id,
                                sources=["intact"], intact_mi=mi)
     return out
