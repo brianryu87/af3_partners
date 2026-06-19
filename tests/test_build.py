@@ -122,3 +122,48 @@ class TestBuildWithIntactRna(unittest.TestCase):
                 sample = json.loads(z.read(rna_jsons[0]))[0]
                 self.assertIn("rna", sample["sequences"][1])
                 self.assertEqual(sample["sequences"][1]["rna"]["sequence"], "ACGUACGUACGU")
+
+
+def fake_http_budget(url):
+    # RPS24 input + two STRING partners: RPS15 (short -> emitted), BIGPROT (long -> over budget)
+    if "/stream?" in url:
+        return FASTA
+    if "string-db.org" in url:
+        return ("stringId_A\tstringId_B\tpreferredName_A\tpreferredName_B\tncbiTaxonId\tscore\t"
+                "nscore\tfscore\tpscore\tascore\tescore\tdscore\ttscore\n"
+                "9606.E1\t9606.E2\tRPS24\tRPS15\t9606\t0.99\t0\t0\t0\t0.9\t0.99\t0.9\t0.7\n"
+                "9606.E1\t9606.E3\tRPS24\tBIGPROT\t9606\t0.99\t0\t0\t0\t0.9\t0.99\t0.9\t0.7\n")
+    if "intact/ws" in url:
+        return '{"content": []}'
+    if "encori" in url:
+        return "#cite\nRBP\tgeneName\tgeneType\ttotalClipExpNum\n"
+    if "cc_interaction" in url:
+        return "Entry\tInteracts with\nP62847\t\n"
+    if "gene_exact" in url and "RPS15" in url:
+        return "Entry\tReviewed\nP62841\treviewed\n"
+    if "gene_exact" in url and "BIGPROT" in url:
+        return "Entry\tReviewed\nQ99999\treviewed\n"
+    if url.endswith("P62841.fasta"):
+        return ">sp|P62841|RS15\nMAAAA\n"            # 5 aa -> under budget
+    if url.endswith("Q99999.fasta"):
+        return ">sp|Q99999|BIG\n" + ("A" * 6000) + "\n"  # 6000 aa -> over budget
+    raise AssertionError(f"unexpected url: {url}")
+
+
+class TestBuildTokenBudget(unittest.TestCase):
+    def test_over_budget_pair_skipped_under_budget_emitted(self):
+        with tempfile.TemporaryDirectory() as d:
+            zip_path = make_inputs.build("RPS24", d, rna_tsv=None, http=fake_http_budget)
+            with zipfile.ZipFile(zip_path) as z:
+                names = z.namelist()
+                jsons = [n for n in names if n.endswith(".json")]
+                # RPS15 emitted for both input isoforms; BIGPROT skipped for both
+                self.assertTrue(jsons, "expected RPS15 JSONs")
+                self.assertTrue(all("P62841" in n for n in jsons),
+                                f"only RPS15 (P62841) should be emitted, got {jsons}")
+                self.assertFalse(any("Q99999" in n for n in jsons),
+                                 "BIGPROT (Q99999) should be skipped (over budget)")
+                # manifest has no row pointing at the skipped partner
+                manifest = z.read("RPS24/manifest.tsv").decode()
+                self.assertNotIn("Q99999", manifest)
+                self.assertIn("P62841", manifest)
