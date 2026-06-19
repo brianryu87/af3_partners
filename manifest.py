@@ -11,9 +11,9 @@ MANIFEST_COLUMNS = [
 ]
 
 
-def manifest_row(inp: InputSeq, partner: Partner, json_path):
+def manifest_row(symbol, inp: InputSeq, partner: Partner, json_path):
     return {
-        "input_gene": inp.accession,
+        "input_gene": symbol,
         "input_accession": inp.accession,
         "input_isoform": inp.isoform_id,
         "input_reviewed": str(inp.reviewed),
@@ -33,7 +33,7 @@ def manifest_row(inp: InputSeq, partner: Partner, json_path):
 
 
 def write_manifest(path, rows):
-    with open(path, "w", newline="") as f:
+    with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=MANIFEST_COLUMNS, delimiter="\t")
         writer.writeheader()
         for row in rows:
@@ -61,5 +61,5 @@ def write_readme(path, symbol, partners, date):
         lines.append("")
         lines.append("Note: no RNA partners — gene is not a catalogued RBP in ENCORI and "
                      "no --rna-tsv was supplied (or supplied rows were empty).")
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
