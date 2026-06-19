@@ -86,14 +86,16 @@ def merge_partners(*dicts):
     return merged
 
 
-def discover_protein_partners(symbol, input_accessions, http=httpget.get):
+def discover_protein_partners(symbol, input_accessions, http=httpget.get, intact_text=None):
     parts = []
     try:
         parts.append(parse_string(fetch_string(symbol, http)))
     except Exception as e:
         print(f"  WARN: STRING failed: {e}")
     try:
-        parts.append(parse_intact(fetch_intact(symbol, http), input_accessions))
+        if intact_text is None:
+            intact_text = fetch_intact(symbol, http)
+        parts.append(parse_intact(intact_text, input_accessions))
     except Exception as e:
         print(f"  WARN: IntAct failed: {e}")
     return merge_partners(*parts)

@@ -145,3 +145,26 @@ class TestParseIntactRna(unittest.TestCase):
 
     def test_only_one_kept(self):
         self.assertEqual(len(self.d), 1)
+
+
+class TestDiscoverRnaWithIntact(unittest.TestCase):
+    def test_intact_rna_resolved_and_appended(self):
+        def fake(url):
+            if "rnacentral" in url:
+                return '{"sequence": "CAAAGUGCUGUUCGUGCAGGUAG", "length": 23}'
+            if "encori" in url:
+                return "#cite\nRBP\tgeneName\tgeneType\ttotalClipExpNum\n"
+            raise AssertionError(f"unexpected url: {url}")
+        parts = rna.discover_rna_partners(
+            "ELAVL1", None, http=fake,
+            intact_text=INTACT_RNA_JSON, input_accessions={"Q15717"})
+        mirs = [p for p in parts if p.partner_id == "URS0000149452"]
+        self.assertEqual(len(mirs), 1)
+        self.assertEqual(mirs[0].sequence, "CAAAGUGCUGUUCGUGCAGGUAG")
+        self.assertEqual(mirs[0].kind, "rna")
+        self.assertEqual(mirs[0].sources, ["intact"])
+
+    def test_no_intact_text_means_no_intact_rna(self):
+        parts = rna.discover_rna_partners(
+            "ELAVL1", None, http=lambda u: "#c\nRBP\tgeneName\tgeneType\ttotalClipExpNum\n")
+        self.assertEqual(parts, [])

@@ -22,7 +22,13 @@ def _collect_partners(symbol, input_seqs, rna_tsv, http):
     input_accs = {s.accession for s in input_seqs}
     result = []
 
-    proteins = partners_mod.discover_protein_partners(symbol, input_accs, http)
+    try:
+        intact_text = partners_mod.fetch_intact(symbol, http)
+    except Exception as e:
+        print(f"  WARN: IntAct fetch failed: {e}")
+        intact_text = None
+
+    proteins = partners_mod.discover_protein_partners(symbol, input_accs, http, intact_text=intact_text)
     seen_acc = {}
     for p in proteins.values():
         p.kind = classify_kind(p.gene)
@@ -42,7 +48,8 @@ def _collect_partners(symbol, input_seqs, rna_tsv, http):
         seen_acc[acc] = p
         result.append(p)
 
-    for p in rna_mod.discover_rna_partners(symbol, rna_tsv, http):
+    for p in rna_mod.discover_rna_partners(symbol, rna_tsv, http,
+                                           intact_text=intact_text, input_accessions=input_accs):
         if not p.sequence:
             print(f"  WARN: no sequence for RNA {p.gene} (ENCORI-only), skipping")
             continue

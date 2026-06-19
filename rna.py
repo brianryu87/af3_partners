@@ -96,7 +96,7 @@ def load_rna_tsv(path):
     return out
 
 
-def discover_rna_partners(symbol, rna_tsv, http=httpget.get):
+def discover_rna_partners(symbol, rna_tsv, http=httpget.get, intact_text=None, input_accessions=None):
     by_gene = {}
     try:
         for key, p in parse_encori(fetch_encori(symbol, http)).items():
@@ -107,10 +107,14 @@ def discover_rna_partners(symbol, rna_tsv, http=httpget.get):
         for p in load_rna_tsv(rna_tsv):
             key = p.gene.upper()
             if key in by_gene:
-                # curated sequence enriches an ENCORI hit
                 by_gene[key].sequence = p.sequence
                 if "curated" not in by_gene[key].sources:
                     by_gene[key].sources.append("curated")
             else:
                 by_gene[key] = p
-    return list(by_gene.values())
+    result = list(by_gene.values())
+    if intact_text and input_accessions:
+        for urs, p in parse_intact_rna(intact_text, input_accessions).items():
+            p.sequence = fetch_rnacentral_sequence(p.partner_id, http)
+            result.append(p)
+    return result

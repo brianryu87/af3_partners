@@ -85,3 +85,40 @@ class TestBuildZeroPartners(unittest.TestCase):
                 self.assertEqual([n for n in names if n.endswith(".json")], [])
                 self.assertTrue(any(n.endswith("manifest.tsv") for n in names))
                 self.assertTrue(any(n.endswith("README.txt") for n in names))
+
+
+INTACT_RNA_BUILD = ('{"content": [{"moleculeA": "RPS24", "moleculeB": "mir-x",'
+                    ' "uniqueIdA": "P62847", "uniqueIdB": "URS0000ABCDEF_9606",'
+                    ' "intactMiscore": 0.6, "taxIdA": 9606, "taxIdB": 9606,'
+                    ' "typeA": "protein", "typeB": "mirna"}]}')
+
+
+def fake_http_rna(url):
+    if "/stream?" in url:
+        return FASTA
+    if "string-db.org" in url:
+        return ("stringId_A\tstringId_B\tpreferredName_A\tpreferredName_B\tncbiTaxonId\tscore\t"
+                "nscore\tfscore\tpscore\tascore\tescore\tdscore\ttscore\n")
+    if "intact/ws" in url:
+        return INTACT_RNA_BUILD
+    if "encori" in url:
+        return "#cite\nRBP\tgeneName\tgeneType\ttotalClipExpNum\n"
+    if "rnacentral" in url:
+        return '{"sequence": "ACGUACGUACGU", "length": 12}'
+    if "cc_interaction" in url:
+        return "Entry\tInteracts with\nP62847\t\n"
+    raise AssertionError(f"unexpected url: {url}")
+
+
+class TestBuildWithIntactRna(unittest.TestCase):
+    def test_intact_rna_produces_rna_json(self):
+        with tempfile.TemporaryDirectory() as d:
+            zip_path = make_inputs.build("RPS24", d, rna_tsv=None, http=fake_http_rna)
+            with zipfile.ZipFile(zip_path) as z:
+                jsons = [n for n in z.namelist() if n.endswith(".json")]
+                rna_jsons = [n for n in jsons if "/rna/" in n]
+                self.assertTrue(rna_jsons, f"expected an rna/ JSON, got {jsons}")
+                self.assertTrue(any("URS0000ABCDEF" in n for n in rna_jsons))
+                sample = json.loads(z.read(rna_jsons[0]))[0]
+                self.assertIn("rna", sample["sequences"][1])
+                self.assertEqual(sample["sequences"][1]["rna"]["sequence"], "ACGUACGUACGU")
