@@ -51,7 +51,7 @@ def _collect_partners(symbol, input_seqs, rna_tsv, http):
     for p in rna_mod.discover_rna_partners(symbol, rna_tsv, http,
                                            intact_text=intact_text, input_accessions=input_accs):
         if not p.sequence:
-            print(f"  WARN: no sequence for RNA {p.gene} (ENCORI-only), skipping")
+            print(f"  WARN: no sequence for RNA {p.gene}, skipping")
             continue
         if len(p.sequence) > rna_mod.RNA_MAX_LEN:
             print(f"  WARN: RNA {p.gene} sequence {len(p.sequence)} nt exceeds RNA_MAX_LEN={rna_mod.RNA_MAX_LEN}, skipping")
