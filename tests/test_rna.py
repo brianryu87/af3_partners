@@ -83,3 +83,22 @@ class TestEncoriFailure(unittest.TestCase):
         genes = {p.gene for p in parts}
         self.assertIn("ZFAS1", genes)    # curated rows still loaded
         self.assertEqual(len(parts), 2)  # ENCORI error swallowed; only the 2 curated rows
+
+
+class TestFetchRnacentralSequence(unittest.TestCase):
+    def test_strips_taxid_and_normalizes_to_rna(self):
+        captured = {}
+        def fake(url):
+            captured["url"] = url
+            return '{"sequence": "CAAAGTGCTG", "length": 10}'
+        seq = rna.fetch_rnacentral_sequence("URS0000149452_9606", http=fake)
+        self.assertIn("/URS0000149452.json", captured["url"])  # taxid suffix stripped
+        self.assertEqual(seq, "CAAAGUGCUG")                    # T -> U
+
+    def test_failure_returns_none(self):
+        def boom(url):
+            raise OSError("rnacentral down")
+        self.assertIsNone(rna.fetch_rnacentral_sequence("URS0000149452_9606", http=boom))
+
+    def test_missing_sequence_field_returns_none(self):
+        self.assertIsNone(rna.fetch_rnacentral_sequence("URS1", http=lambda u: '{"length": 0}'))

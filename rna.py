@@ -1,4 +1,5 @@
 import csv
+import json
 import urllib.parse
 
 import httpget
@@ -8,6 +9,7 @@ from models import Partner
 ENCORI_ASSEMBLY = "hg38"
 ENCORI_MAX = 25
 RNA_MAX_LEN = 1500
+RNACENTRAL = "https://rnacentral.org/api/v1/rna"
 
 
 def fetch_encori(symbol, http=httpget.get):
@@ -42,6 +44,18 @@ def parse_encori(text):
                            sources=["encori"],
                            encori_evidence=f"{evidence} CLIP experiments")
     return out
+
+
+def fetch_rnacentral_sequence(urs, http=httpget.get):
+    base = urs.split("_")[0]  # strip any _<taxid> suffix
+    try:
+        data = json.loads(http(f"{RNACENTRAL}/{base}.json"))
+    except Exception:
+        return None
+    seq = data.get("sequence")
+    if not seq:
+        return None
+    return to_rna(seq)
 
 
 def load_rna_tsv(path):
