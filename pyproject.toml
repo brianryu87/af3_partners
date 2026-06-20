@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "af3partners"
+version = "0.1.0"
+description = "Generate AlphaFold3 input JSONs for a human gene's interaction partners"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Brian Ryu", email = "brianryu87@gmail.com" }]
+dependencies = []
+
+[project.scripts]
+af3partners = "af3partners.make_inputs:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["af3partners"]
