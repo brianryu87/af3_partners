@@ -5,7 +5,7 @@ one per (input-protein isoform × interacting partner).
 
 ## Install
 
-    git clone <repo-url>
+    git clone https://github.com/brianryu87/af3_partners.git
     cd af3_partners
     pip install .          # or: pip install -e .   (for development)
 
