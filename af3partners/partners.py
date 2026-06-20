@@ -1,8 +1,8 @@
 import json
 import urllib.parse
 
-import httpget
-from models import Partner
+from . import httpget
+from .models import Partner
 
 ORGANISM = 9606
 

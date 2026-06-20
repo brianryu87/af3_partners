@@ -4,8 +4,8 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import classify
-from models import Partner
+from af3partners import classify
+from af3partners.models import Partner
 
 
 class TestClassifyKind(unittest.TestCase):

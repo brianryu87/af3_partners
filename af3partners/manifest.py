@@ -1,7 +1,7 @@
 import csv
 from collections import Counter
 
-from models import InputSeq, Partner
+from .models import InputSeq, Partner
 
 MANIFEST_COLUMNS = [
     "input_gene", "input_accession", "input_isoform", "input_reviewed",

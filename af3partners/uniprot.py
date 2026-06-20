@@ -1,8 +1,8 @@
 import re
 import urllib.parse
 
-import httpget
-from models import InputSeq
+from . import httpget
+from .models import InputSeq
 
 ORGANISM = 9606
 BASE = "https://rest.uniprot.org/uniprotkb"

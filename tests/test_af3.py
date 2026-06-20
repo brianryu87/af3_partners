@@ -4,8 +4,8 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import af3
-from models import InputSeq, Partner
+from af3partners import af3
+from af3partners.models import InputSeq, Partner
 
 
 class TestAf3(unittest.TestCase):

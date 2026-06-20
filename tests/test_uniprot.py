@@ -4,7 +4,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import uniprot
+from af3partners import uniprot
 
 FASTA = (
     ">sp|P62847|RS24_HUMAN 40S ribosomal protein S24 OS=Homo sapiens\n"

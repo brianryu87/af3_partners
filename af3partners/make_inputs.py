@@ -7,13 +7,13 @@ import tempfile
 import zipfile
 from datetime import date
 
-import httpget
-import uniprot
-import partners as partners_mod
-import rna as rna_mod
-import manifest as manifest_mod
-from af3 import af3_protein_pair, af3_rna_pair, AF3_MAX_TOKENS
-from classify import classify_kind, derive_tier
+from . import httpget
+from . import uniprot
+from . import partners as partners_mod
+from . import rna as rna_mod
+from . import manifest as manifest_mod
+from .af3 import af3_protein_pair, af3_rna_pair, AF3_MAX_TOKENS
+from .classify import classify_kind, derive_tier
 
 KIND_DIR = {"ribosomal": "ribosomal_protein", "nonribosomal": "nonribosomal_protein", "rna": "rna"}
 
