@@ -6,8 +6,8 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import manifest
-from models import InputSeq, Partner
+from af3partners import manifest
+from af3partners.models import InputSeq, Partner
 
 
 class TestManifestRow(unittest.TestCase):

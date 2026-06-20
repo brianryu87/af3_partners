@@ -2,9 +2,9 @@ import csv
 import json
 import urllib.parse
 
-import httpget
-from af3 import to_rna
-from models import Partner
+from . import httpget
+from .af3 import to_rna
+from .models import Partner
 
 ENCORI_ASSEMBLY = "hg38"
 ENCORI_MAX = 25

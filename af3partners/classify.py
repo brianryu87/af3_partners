@@ -1,6 +1,6 @@
 import re
 
-from models import Partner
+from .models import Partner
 
 RIBOSOMAL_RE = re.compile(r"^(RPS|RPL|MRPS|MRPL)\d")
 RIBOSOMAL_EXPLICIT = {"RPSA", "FAU", "RACK1", "UBA52", "RPLP0", "RPLP1", "RPLP2"}

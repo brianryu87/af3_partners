@@ -1,6 +1,6 @@
 import random
 
-from models import InputSeq, Partner
+from .models import InputSeq, Partner
 
 AF3_DIALECT = "alphafold3"
 AF3_VERSION = 4  # latest AF3 input JSON schema version

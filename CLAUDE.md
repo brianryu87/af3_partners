@@ -4,22 +4,24 @@ Generalizes the RPS24-specific AF3 input pipeline to any human gene.
 
 ## Run
 
-    python make_inputs.py SYMBOL [--out DIR] [--rna-tsv FILE]   # writes SYMBOL.zip
+    af3partners SYMBOL [--out DIR] [--rna-tsv FILE]    # after pip install
+    python -m af3partners SYMBOL [--out DIR] [--rna-tsv FILE]   # from repo root
 
-Pure stdlib. Network is isolated in `httpget.get` and injected into every source
+Pure stdlib. Installs via `pip install .` (hatchling, pure stdlib, no dependencies).
+Network is isolated in `httpget.get` and injected into every source
 function as `http=` for testability.
 
 ## Modules
 
-- `httpget.py` — single HTTP helper.
-- `models.py` — `InputSeq`, `Partner` dataclasses.
-- `uniprot.py` — gene → isoform sequences; accession/sequence lookup; curated interactions.
-- `partners.py` — STRING + IntAct protein-partner discovery + union.
-- `rna.py` — ENCORI + IntAct-RNA (RNAcentral) + curated-TSV RNA partners.
-- `classify.py` — ribosomal/non-ribosomal classification; confidence tiering.
-- `af3.py` — AF3-local JSON builders.
-- `manifest.py` — manifest.tsv + README.txt.
-- `make_inputs.py` — orchestration, zip, CLI.
+- `af3partners/httpget.py` — single HTTP helper.
+- `af3partners/models.py` — `InputSeq`, `Partner` dataclasses.
+- `af3partners/uniprot.py` — gene → isoform sequences; accession/sequence lookup; curated interactions.
+- `af3partners/partners.py` — STRING + IntAct protein-partner discovery + union.
+- `af3partners/rna.py` — ENCORI + IntAct-RNA (RNAcentral) + curated-TSV RNA partners.
+- `af3partners/classify.py` — ribosomal/non-ribosomal classification; confidence tiering.
+- `af3partners/af3.py` — AF3-local JSON builders.
+- `af3partners/manifest.py` — manifest.tsv + README.txt.
+- `af3partners/make_inputs.py` — orchestration, zip, CLI.
 
 ## Notes
 

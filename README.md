@@ -3,10 +3,20 @@
 Turn a human gene symbol into a zip of AlphaFold3 (AF3) local-format input JSONs,
 one per (input-protein isoform × interacting partner).
 
+## Install
+
+    git clone <repo-url>
+    cd af3_partners
+    pip install .          # or: pip install -e .   (for development)
+
 ## Usage
 
-    python make_inputs.py RPS24 --out .
-    python make_inputs.py RPS24 --rna-tsv my_rna_partners.tsv
+    af3partners RPS24 --out .
+    af3partners RPS24 --rna-tsv my_rna_partners.tsv
+
+Without installing, run it from the repo root with:
+
+    python -m af3partners RPS24
 
 Output: `RPS24.zip` containing:
 

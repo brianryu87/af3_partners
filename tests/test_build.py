@@ -7,7 +7,7 @@ import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import make_inputs
+from af3partners import make_inputs
 
 FASTA = (
     ">sp|P62847|RS24_HUMAN OS=Homo sapiens\nMNDTVTIR\n"
